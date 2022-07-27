@@ -1,0 +1,7 @@
+*.ipynb
+vscode
+.vscode
+__pycache__
+*.pyc
+*.tar.gz
+.ipynb_checkpoints
