@@ -1,0 +1,114 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Reviewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+</head>
+<body id="page-body">
+    <h1 class="page-heading">Data Reviewer Tool</h1>
+    <div class="pair-heading">
+        <h3 id="img-name" class="name">Image: {{ img_name }}</h3>
+        <h3 id="mask-name" class="name">Mask: {{ mask_name }}</h3>
+    </div>
+
+    <div class="image-container">
+        <img id="original-image" src="data:image/png;base64,{{ image }}" alt="Original Image">
+        <img id="overlay-image" src="data:image/png;base64,{{ overlay }}" alt="Overlay Image">
+        <img id="mask-image" src="data:image/png;base64,{{ mask }}" alt="Mask Image">
+    </div>
+    <div class="opacity-container">
+        <p id="demo"></p>
+        <input type="range" min="0" max="100" value="30" class="slider" id="myRange">
+    </div>
+    <div class="button-container">
+        <a href="{{ url_for('get_img_mask_pair_by_id', img_id=prev_img_id, direction='prev') }}">
+            <button id="btn-prev" class="btn-nav">← Prev</button>
+        </a>
+        <button id="btn-remove" class="btn-action">Remove</button>
+        <button  id="btn-keep" class="btn-action">Keep</button>
+        <a href="{{ url_for('get_img_mask_pair_by_id', img_id=next_img_id, direction='next') }}">
+            <button id="btn-next" class="btn-nav">Next →</button>
+        </a>
+    </div>
+    <div  id="results" class="results-container">
+        <div id="keep-list">
+            <h3>Keep List</h3>
+            <ul>
+            {% for item in keep_list %}
+                <li>{{ item }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+        <div id="remove-list">
+            <h3>Remove List</h3>
+            <ul>
+                {% for item in remove_list %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+<footer>
+    <script>
+        let slider = document.getElementById("myRange");
+        let output = document.getElementById("demo");
+        output.innerText = `Opacity: ${slider.value}%`; // Display the default slider value
+        // Update the current slider value (each time you drag the slider handle)
+        slider.oninput = function() {
+            output.innerText = `Opacity: ${this.value}%`;
+        } 
+
+        // Handle the Image and Mask Names
+        let imgName = document.getElementById("img-name");
+        let maskName = document.getElementById("mask-name");
+        
+        imgName = imgName.innerText;
+        maskName = maskName.innerText;
+        imgName = imgName.split("Image: ")
+        maskName = maskName.split("Mask: ")
+        imgName = imgName[imgName.length-1]
+        maskName = maskName[maskName.length-1]
+
+        let imgID = imgName.split(".png")[0]
+
+        console.log(imgName, maskName)
+
+        // POST Requests for Keep or Remove
+        let keepBtn = document.getElementById("btn-keep");
+        let removeBtn = document.getElementById("btn-remove");
+
+        keepBtn.onclick = () => {
+            console.log("keep")
+            const request = new XMLHttpRequest();
+            request.open("POST", `/${imgID}`)
+            request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            request.onload = () => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(request.responseText, "text/html");
+                console.log(doc.getElementById("results").innerHTML);
+                document.getElementById("results").innerHTML = doc.getElementById("results").innerHTML;
+            }
+
+            request.send(`action=keep&img_id=${imgID}`);
+        }
+        removeBtn.onclick = () => {
+            console.log("remove")
+            const request = new XMLHttpRequest();
+            request.open("POST", `/${imgID}`)
+            request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            request.onload = () => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(request.responseText, "text/html");
+                console.log(doc.getElementById("results").innerHTML);
+                document.getElementById("results").innerHTML = doc.getElementById("results").innerHTML;
+            }
+            request.send(`action=remove&img_id=${imgID}`);
+        }
+
+
+    </script>
+</footer>
+</html>
